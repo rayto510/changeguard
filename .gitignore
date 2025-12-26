@@ -1,0 +1,89 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Build artifacts
+build/
+dist/
+*.o
+*.a
+*.so
+server
+*.exe
+
+# Go
+go.sum
+vendor/
+*.test
+coverage.out
+.coverage/
+
+# Node/Frontend
+node_modules/
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+frontend/dist/
+frontend/.cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+.gitkeep
+
+# Docker
+.docker/
+.dockerignore
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.pgdump
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Testing
+.nyc_output/
+coverage/
+*.lcov
+.mocha_output/
+
+# Misc
+*.bak
+*.tmp
+*.temp
+.cache/
+temp/
+
+# CI/CD
+.github/workflows/secrets
+
+# Development
+debug/
+.venv/
+venv/
+env/
+ENV/
