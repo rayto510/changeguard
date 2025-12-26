@@ -1,17 +1,18 @@
 # ChangeGuard Data Flow (v1)
 
-This document illustrates how data moves through ChangeGuard v1, specifically for tracking schema/API breaking changes.
+This document illustrates how data moves through ChangeGuard v1, specifically for tracking schema/API breaking changes, now aligned with the high-level architecture.
 
 ---
 
 ## 1. Overview
 
-ChangeGuard v1 tracks breaking changes in schemas or APIs, notifies affected teams, and keeps an audit trail. The main components are:
+ChangeGuard v1 tracks breaking schema/API changes, notifies affected teams, and keeps an audit trail. Main components:
 
 - **Frontend:** React + TypeScript UI for viewing schema changes, adding comments, and managing notifications.
-- **Backend:** Go API handles CRUD operations, notifications, and change tracking.
+- **Backend:** Go API handles CRUD operations, notifications, caching, and async messaging.
 - **Database:** PostgreSQL stores schema changes, comments, users, and notifications.
-- **Cache / Messaging:** Redis for caching and optional pub/sub for real-time notifications.
+- **Cache:** Redis for caching frequently accessed data.
+- **Message Broker:** Facilitates async services like notifications, audit logging, and email alerts.
 
 ---
 
@@ -19,67 +20,79 @@ ChangeGuard v1 tracks breaking changes in schemas or APIs, notifies affected tea
 
 ### Step 1: Record a Schema Change
 
-1. Developer detects or plans a schema change (e.g., removing a column).
+1. Developer detects/plans a schema change (e.g., removing a column).
 2. Frontend sends `POST /schema-changes` to backend.
 3. Backend:
    - Validates the change.
    - Stores it in PostgreSQL.
-   - Marks the change as `open`.
-   - Determines affected services or teams.
+   - Updates Redis cache if necessary.
+   - Publishes a message to the message broker.
+4. Message broker distributes events to async services.
 
 ---
 
-### Step 2: Notify Affected Teams
+### Step 2: Async Services Triggered
 
-1. Backend generates notifications for all affected users/services.
-2. Notifications are saved in PostgreSQL.
-3. Optional: publish to Redis pub/sub for real-time updates to subscribed clients.
-4. Users receive alerts in the frontend via WebSocket or polling.
+1. **Notification Service**
+   - Sends notifications to affected users.
+   - Updates PostgreSQL notification table.
+   - Can push real-time updates via WebSocket to frontend.
+
+2. **Audit Logging Service**
+   - Logs the schema change and all updates/comments for historical tracking.
+
+3. **Email Service**
+   - Sends email alerts to affected users (optional for v1).
 
 ---
 
-### Step 3: Comment and Collaborate
+### Step 3: Comments & Collaboration
 
-1. Developers can comment on a schema change via `POST /schema-changes/:id/comments`.
-2. Backend stores comments in PostgreSQL linked to the schema change.
-3. All relevant users are notified of new comments.
+1. Developers comment on schema changes via `POST /schema-changes/:id/comments`.
+2. Backend stores comments in PostgreSQL.
+3. Async services may notify relevant users of new comments.
+4. Frontend state updates to reflect new comments in real-time (via cache or WebSocket).
 
 ---
 
 ### Step 4: Resolve Changes
 
-1. When a change is addressed, a developer updates its status via `PUT /schema-changes/:id` (e.g., `status=resolved`).
-2. Backend updates the record and notifies stakeholders.
-3. Audit logs maintain history of changes, status updates, and comments.
+1. When a change is addressed, developer updates status via `PUT /schema-changes/:id`.
+2. Backend updates PostgreSQL and Redis cache.
+3. Async services notify stakeholders and log the resolution in audit service.
+4. Frontend reflects resolved state and notifications are marked accordingly.
 
 ---
 
 ## 3. Notifications Flow
 
-- **Trigger:** Any new breaking change or comment.
-- **Backend:** Creates notification entries per affected user.
-- **Delivery:** Real-time via WebSocket or via frontend polling.
-- **User Action:** `PUT /notifications/:id/read` marks notifications as read.
+- **Trigger:** New breaking change or comment.
+- **Backend:** Publishes event to message broker.
+- **Notification Service:** Creates notification entries and pushes real-time updates.
+- **Frontend:** Updates notifications list; users mark as read via `PUT /notifications/:id/read`.
 
 ---
 
-## 4. Data Flow Diagram
+## 4. Updated Data Flow Diagram
 
 ```mermaid
 flowchart LR
     subgraph Frontend
-        A[User Interface]
+        A[React App]
     end
 
     subgraph Backend
-        B[Go API] --> C[PostgreSQL DB]
-        B --> D[Redis Cache / PubSub]
+        B[Go API] --> C[PostgreSQL]
+        B --> D[Redis Cache]
+        B --> E[Message Broker]
     end
 
-    subgraph Notifications & Audit
-        D --> E[Notification Service]
-        D --> F[Audit Log Service]
+    subgraph Async Services
+        E --> F[Notification Service]
+        E --> G[Audit Logging Service]
+        E --> H[Email Service]
     end
 
     A --> B
-    E --> A
+    F --> A
+    G --> A
