@@ -2,22 +2,22 @@
 
 Curated collection of resources, references, and learning materials for ChangeGuard development and deployment.
 
-## Backend Development (Go)
+## Backend Development (Python)
 
 ### Official Documentation
-- **Go Language**: https://golang.org/ - Official Go website
-- **Go Modules**: https://golang.org/ref/mod - Dependency management
-- **Go Best Practices**: https://golang.org/doc/effective_go - Writing idiomatic Go
-- **Go Testing**: https://golang.org/pkg/testing/ - Unit testing guide
+- **Python Language**: https://www.python.org/ - Official Python website
+- **Python Documentation**: https://docs.python.org/3/ - Python 3 reference
+- **PEP 8**: https://pep8.org/ - Python style guide
+- **FastAPI Documentation**: https://fastapi.tiangolo.com/ - Framework we use
 
 ### Frameworks & Libraries
-- **Gin Web Framework**: https://gin-gonic.com/ - HTTP web framework we use
-- **Go-Fiber**: https://gofiber.io/ - Alternative lightweight framework
-- **GORM**: https://gorm.io/ - Object-relational mapping
-- **sqlc**: https://sqlc.dev/ - Type-safe SQL from queries
-- **golang-migrate**: https://github.com/golang-migrate/migrate - Database migrations
-- **jwt-go**: https://github.com/golang-jwt/jwt - JWT token handling
-- **bcrypt**: https://pkg.go.dev/golang.org/x/crypto/bcrypt - Password hashing
+- **FastAPI**: https://fastapi.tiangolo.com/ - Modern Python web framework
+- **Uvicorn**: https://www.uvicorn.org/ - ASGI server implementation
+- **Pydantic**: https://docs.pydantic.dev/ - Data validation using Python types
+- **SQLAlchemy**: https://www.sqlalchemy.org/ - Object-relational mapping
+- **Alembic**: https://alembic.sqlalchemy.org/ - Database migrations
+- **PyJWT**: https://pyjwt.readthedocs.io/ - JWT token handling
+- **Passlib**: https://passlib.readthedocs.io/ - Password hashing
 
 ### Database (PostgreSQL)
 - **PostgreSQL Docs**: https://www.postgresql.org/docs/16/
@@ -33,10 +33,10 @@ Curated collection of resources, references, and learning materials for ChangeGu
 - **Distributed Locking**: https://redis.io/docs/manual/client-side-caching/
 
 ### Tutorials
-- **REST API with Go and PostgreSQL**: https://www.digitalocean.com/community/tutorials/how-to-build-an-api-with-go
-- **JWT Authentication in Go**: https://www.digitalocean.com/community/tutorials/how-to-use-jwt-for-authentication-in-golang
-- **Testing in Go**: https://www.digitalocean.com/community/tutorials/how-to-write-unit-tests-in-go
-- **Concurrent Patterns**: https://www.golang-book.com/books/intro/10
+- **FastAPI Full Stack**: https://fastapi.tiangolo.com/tutorial/ - Official tutorial
+- **Building APIs with FastAPI**: https://realpython.com/fastapi-python-web-apis/
+- **JWT Authentication**: https://fastapi.tiangolo.com/advanced/security/oauth2-jwt/
+- **Async in Python**: https://realpython.com/async-io-python/ - Async/await patterns
 
 ---
 
@@ -153,10 +153,11 @@ Curated collection of resources, references, and learning materials for ChangeGu
 ## Testing
 
 ### Backend Testing
-- **Go Testing**: https://golang.org/pkg/testing/
-- **Testify**: https://github.com/stretchr/testify - Testing toolkit
-- **MockSQL**: https://github.com/DATA-DOG/go-sqlmock - SQL mocking
-- **Test Coverage**: https://golang.org/cmd/cover/ - Coverage analysis
+- **Pytest**: https://docs.pytest.org/ - Testing framework
+- **FastAPI Testing**: https://fastapi.tiangolo.com/advanced/testing-dependencies/
+- **pytest-asyncio**: https://pytest-asyncio.readthedocs.io/ - Async testing support
+- **Faker**: https://faker.readthedocs.io/ - Test data generation
+- **Coverage**: https://coverage.readthedocs.io/ - Code coverage analysis
 
 ### Frontend Testing
 - **Vitest**: https://vitest.dev/ - Unit testing framework
@@ -191,10 +192,10 @@ Curated collection of resources, references, and learning materials for ChangeGu
 ## Learning Paths
 
 ### For Backend Engineers
-1. **Go Fundamentals**: Effective Go + Go Testing (1 week)
-2. **REST API Design**: Build API with Gin + PostgreSQL (2 weeks)
-3. **Authentication**: JWT + OAuth 2.0 + bcrypt (1 week)
-4. **Database Design**: PostgreSQL + GORM + migrations (2 weeks)
+1. **Python Fundamentals**: Python basics + async/await (1 week)
+2. **FastAPI Essentials**: Build API with FastAPI + PostgreSQL (2 weeks)
+3. **Authentication**: JWT + OAuth 2.0 + password hashing (1 week)
+4. **Database Design**: PostgreSQL + SQLAlchemy + Alembic (2 weeks)
 5. **DevOps**: Docker + Docker Compose + GitHub Actions (2 weeks)
 6. **Production**: AWS + monitoring + security (2 weeks)
 
@@ -215,7 +216,6 @@ Combine both paths above (10-12 weeks total)
 
 ### Development Environment
 - **VS Code**: https://code.visualstudio.com/
-- **Go Extension**: https://marketplace.visualstudio.com/items?itemName=golang.go
 - **Thunder Client**: https://www.thunderclient.com/ - API testing
 - **Postman**: https://www.postman.com/ - API client
 
@@ -234,7 +234,7 @@ Combine both paths above (10-12 weeks total)
 ## Books & Further Reading
 
 ### Recommended Books
-- "The Go Programming Language" - Donovan & Kernighan
+- "Fluent Python" - Luciano Ramalho
 - "Design Patterns" - Gang of Four
 - "Clean Code" - Robert Martin
 - "Building Microservices" - Sam Newman
@@ -250,7 +250,7 @@ Combine both paths above (10-12 weeks total)
 ## Getting Help
 
 - **GitHub Issues**: Ask on project repository
-- **Stack Overflow**: Tag with `go`, `react`, `postgresql`, `docker`
+- **Stack Overflow**: Tag with `python`, `fastapi`, `postgresql`, `docker`
 - **Official Documentation**: Always start here
-- **Community Forums**: Reddit r/golang, r/reactjs
-- **Slack Communities**: Go Slack, React Discord
+- **Community Forums**: Reddit r/Python, r/FastAPI, r/reactjs
+- **Slack Communities**: Python Discord, FastAPI Discord, React Discord

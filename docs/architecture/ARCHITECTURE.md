@@ -15,7 +15,7 @@ This document describes the overall system architecture, components, and their i
   - Optional: WebSocket subscription for real-time updates
 
 ### 1.2 Backend
-- **Technology:** Go (Gin or Fiber)
+- **Technology:** Python (FastAPI)
 - **Responsibilities:**
   - REST API endpoints for CRUD operations
   - Input validation and business logic
@@ -73,7 +73,7 @@ flowchart LR
     end
 
     subgraph Backend
-        B[Go API] --> C[PostgreSQL]
+        B[FastAPI Server] --> C[PostgreSQL]
         B --> D[Redis Cache]
         B --> E[Message Broker]
     end

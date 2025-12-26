@@ -63,42 +63,46 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          go-version: '1.21'
-          cache: true
+          python-version: '3.11'
+          cache: 'pip'
 
-      - name: Download dependencies
-        run: go mod download
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
-      - name: Run lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest
-          args: --timeout=5m
+      - name: Run linter
+        run: |
+          pip install flake8
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Run type checker
+        run: |
+          pip install mypy
+          mypy . --ignore-missing-imports
 
       - name: Run tests
         run: |
-          cd backend
-          go test ./... -v -race -coverprofile=coverage.out
-          go tool cover -func=coverage.out
+          pip install pytest pytest-cov
+          pytest -v --cov=. --cov-report=xml
         env:
-          DATABASE_URL: postgres://test_user:test_password@localhost:5432/changeguard_test?sslmode=disable
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/changeguard_test
           REDIS_URL: redis://localhost:6379/0
           JWT_SECRET: test-secret-key
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          files: ./backend/coverage.out
+          files: ./coverage.xml
           flags: backend
           name: backend-coverage
 
       - name: Run security scan
         run: |
-          go install github.com/securego/gosec/v2/cmd/gosec@latest
-          gosec ./backend/...
+          pip install bandit
+          bandit -r . -f json -o bandit-report.json || true
 
       - name: Check for secret leaks
         uses: trufflesecurity/trufflehog@main

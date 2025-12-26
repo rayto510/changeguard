@@ -5,7 +5,7 @@ Complete guide to deploying ChangeGuard to AWS with production-grade infrastruct
 ## Overview
 
 This guide covers deploying ChangeGuard to AWS using:
-- **Compute**: EC2 instances with Auto Scaling Groups
+- **Compute**: EC2 instances with Auto Scaling Groups running FastAPI
 - **Database**: RDS PostgreSQL with Multi-AZ failover
 - **Cache**: ElastiCache Redis with automatic failover
 - **Load Balancing**: Application Load Balancer (ALB) with SSL/TLS
@@ -20,7 +20,7 @@ Route 53 (DNS)
     ↓
 ALB (443 HTTPS) ← CloudFront (optional CDN)
     ↓ (port 8080)
-Backend EC2 (x3) ← Auto Scaling Group
+Backend EC2 (x3) ← Auto Scaling Group (Python/FastAPI)
     ↓
 PostgreSQL RDS (Multi-AZ)
     ↓

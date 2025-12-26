@@ -19,11 +19,12 @@ In microservice architectures, breaking schema and API changes cause integration
 ## Tech Stack
 
 ### Backend
-- **Language**: Go 1.21
-- **Framework**: Gin (HTTP) with modular architecture
+- **Language**: Python 3.11
+- **Framework**: FastAPI (HTTP) with async/await patterns
 - **Database**: PostgreSQL 16 (primary datastore)
 - **Cache**: Redis 7 (distributed caching with AOF persistence)
 - **Auth**: JWT with role-based access control
+- **ASGI Server**: Uvicorn for production deployments
 - **Future**: WebSockets for real-time updates, gRPC for internal services
 
 ### Frontend
@@ -46,13 +47,16 @@ In microservice architectures, breaking schema and API changes cause integration
 
 ```
 changeguard/
-├── cmd/server/           # Backend entry point
-│   └── main.go
 ├── backend/              # Backend source code
-│   ├── handlers/         # HTTP request handlers
-│   ├── models/           # Data models
-│   ├── db/               # Database layer
-│   └── middleware/       # JWT auth, CORS, logging
+│   ├── main.py           # Application entry point
+│   ├── api/              # API routes and endpoints
+│   ├── models/           # Data models and schemas
+│   ├── db/               # Database layer and migrations
+│   ├── auth/             # Authentication and JWT
+│   ├── middleware/       # Middleware (CORS, logging)
+│   ├── services/         # Business logic services
+│   └── requirements.txt   # Python dependencies
+├── tests/                # Unit and integration tests
 ├── frontend/             # React application
 │   ├── src/
 │   │   ├── components/   # React components
@@ -68,18 +72,17 @@ changeguard/
 │   ├── operations/      # Monitoring, security, backup
 │   └── notes/           # Decision logs, resources
 ├── docker-compose.yml    # Multi-service orchestration
-├── Dockerfile.backend    # Go application container
+├── Dockerfile.backend    # Python application container
 ├── Dockerfile.frontend   # React application container
-├── .env.example         # Environment configuration template
-├── Makefile             # Convenience commands
-└── go.mod/go.sum        # Go dependencies
+├── requirements.txt      # Python dependencies
+└── Makefile             # Convenience commands
 ```
 
 ## Quick Start
 
 ### Prerequisites
 - Docker & Docker Compose (recommended)
-- Or: Go 1.21+, Node 20+, PostgreSQL 16, Redis 7
+- Or: Python 3.11+, Node 20+, PostgreSQL 16, Redis 7
 
 ### Docker Setup (Recommended)
 ```bash
@@ -103,9 +106,10 @@ docker-compose up --build
 ### Local Development Setup
 ```bash
 # Backend
-cd backend
-go mod download
-go run ./cmd/server
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r backend/requirements.txt
+uvicorn backend.main:app --reload --host 0.0.0.0 --port 8080
 # Runs on http://localhost:8080
 
 # Frontend (separate terminal)
@@ -182,8 +186,7 @@ See [DB Schema Documentation](docs/architecture/DB_SCHEMA.md) for ERD and table 
 ### Running Tests
 ```bash
 # Backend tests
-cd backend
-go test ./... -v
+pytest -v
 
 # Frontend tests
 cd frontend
@@ -192,9 +195,9 @@ npm run test
 
 ### Running Linters
 ```bash
-# Backend (Go)
-cd backend
-golangci-lint run ./...
+# Backend (Python)
+flake8 .
+mypy . --ignore-missing-imports
 
 # Frontend
 cd frontend

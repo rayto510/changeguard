@@ -6,7 +6,7 @@ This guide will help you set up ChangeGuard using Docker and Docker Compose. The
 
 - **PostgreSQL**: Primary database
 - **Redis**: Caching layer
-- **Go Backend**: REST API server on port 8080
+- **FastAPI Backend**: REST API server on port 8080
 - **React Frontend**: Web UI served via Nginx on port 3000
 
 ## Prerequisites
@@ -15,7 +15,7 @@ This guide will help you set up ChangeGuard using Docker and Docker Compose. The
 - Docker version 20.10+ or higher
 - Docker Compose version 2.0+ or higher
 - At least 4GB of available RAM
-- 5GB of disk space
+- 10GB of disk space (additional space for Python dependencies)
 
 ### Installing Docker
 
