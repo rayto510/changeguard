@@ -158,7 +158,92 @@ Create a new schema change record.
 - `401`: Unauthorized
 - `422`: Invalid change_type or status
 
-### GET /schema-changes
+---
+
+## Users
+
+### GET /users/me
+
+Get current authenticated user profile.
+
+**Request**:
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+```
+
+**Response** (200 OK):
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "email": "engineer@company.com",
+  "name": "Alice Engineer",
+  "company": "ACME Inc",
+  "permissions": ["create_changes", "comment"],
+  "createdAt": "2025-12-25T14:30:00Z"
+}
+```
+
+**Errors**:
+- `401`: Not authenticated
+- `404`: User not found
+
+### PUT /users/me
+
+Update current user profile.
+
+**Request**:
+```json
+{
+  "name": "Alice Senior Engineer",
+  "company": "ACME Inc"
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "email": "engineer@company.com",
+  "name": "Alice Senior Engineer",
+  "company": "ACME Inc",
+  "permissions": ["create_changes", "comment"],
+  "createdAt": "2025-12-25T14:30:00Z"
+}
+```
+
+**Errors**:
+- `401`: Not authenticated
+- `422`: Validation failed
+
+### GET /users/:id
+
+Get user profile by ID.
+
+**Request**:
+```
+GET /api/v1/users/550e8400-e29b-41d4-a716-446655440000
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+```
+
+**Response** (200 OK):
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "email": "engineer@company.com",
+  "name": "Alice Engineer",
+  "company": "ACME Inc",
+  "permissions": ["create_changes", "comment"],
+  "createdAt": "2025-12-25T14:30:00Z"
+}
+```
+
+**Errors**:
+- `401`: Not authenticated
+- `404`: User not found
+
+---
+
+## Schema Changes
 
 List schema changes with optional filtering.
 

@@ -151,6 +151,9 @@ See [API Documentation](docs/architecture/API.md) for complete reference.
 ### Core Endpoints
 - `POST /auth/login` - User authentication
 - `POST /auth/register` - Create account
+- `GET /users/me` - Get current user profile
+- `PUT /users/me` - Update user profile
+- `GET /users/:id` - Get user by ID
 - `GET /schema-changes` - List changes (with filtering)
 - `POST /schema-changes` - Create change record
 - `GET /schema-changes/:id` - Get change details
