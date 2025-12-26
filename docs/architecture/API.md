@@ -1,200 +1,473 @@
-1. API.md (Schema-Breaking Version)
 # ChangeGuard API Documentation (v1)
 
-Tracks schema and API changes, alerts relevant teams, and provides discussion threads for breaking changes.
-
----
+Complete REST API reference for schema and API change tracking, team collaboration, and notifications.
 
 ## Base URL
 
-- Production: `https://api.changeguard.com/v1`  
-- Local: `http://localhost:8080/api/v1`
+- **Production**: `https://api.changeguard.io/api/v1`
+- **Staging**: `https://staging-api.changeguard.io/api/v1`
+- **Local Development**: `http://localhost:8080/api/v1`
 
----
+## Overview
+
+ChangeGuard API provides endpoints for:
+- User authentication and authorization
+- Schema change tracking and management
+- Team collaboration through comments
+- Real-time notifications
+- Change analytics and reporting
 
 ## Authentication
 
-### Login
+### JWT Token Flow
 
-- **POST /auth/login**  
-- **Request Body:**
+All endpoints (except `/auth/*`) require JWT token in the `Authorization` header:
+
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+Token claims:
 ```json
 {
+  "sub": "user-id-uuid",
   "email": "user@example.com",
-  "password": "password123"
+  "permissions": ["create_changes", "comment", "admin"],
+  "iat": 1703123456,
+  "exp": 1703209856
 }
+```
 
+### POST /auth/login
 
-Response:
+Authenticate user with email and password.
 
+**Request**:
+```json
 {
-  "access_token": "JWT_TOKEN",
-  "refresh_token": "REFRESH_TOKEN",
-  "expires_in": 3600
+  "email": "engineer@company.com",
+  "password": "securepassword123"
 }
+```
 
-Register
-
-POST /auth/register
-
-Request Body:
-
+**Response** (200 OK):
+```json
 {
-  "email": "user@example.com",
-  "password": "password123",
-  "name": "John Doe"
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "user": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "email": "engineer@company.com",
+    "name": "Alice Engineer",
+    "permissions": ["create_changes", "comment"]
+  },
+  "expiresIn": 86400
 }
+```
 
+**Errors**:
+- `400`: Missing email or password
+- `401`: Invalid credentials
+- `500`: Server error
 
-Response:
+### POST /auth/register
 
+Create new user account.
+
+**Request**:
+```json
 {
-  "id": "uuid",
-  "email": "user@example.com",
-  "name": "John Doe"
+  "email": "newuser@company.com",
+  "password": "securepassword123",
+  "name": "Bob Developer",
+  "company": "ACME Inc"
 }
+```
 
-Schema Changes
-Create Schema Change Record
-
-POST /schema-changes
-
-Request Body:
-
+**Response** (201 Created):
+```json
 {
-  "name": "users.email column removed",
-  "description": "The email column was dropped from users table",
+  "id": "550e8400-e29b-41d4-a716-446655440001",
+  "email": "newuser@company.com",
+  "name": "Bob Developer",
+  "company": "ACME Inc",
+  "createdAt": "2025-12-25T14:30:00Z"
+}
+```
+
+**Errors**:
+- `400`: Invalid email or weak password
+- `409`: Email already registered
+- `422`: Validation failed
+
+### POST /auth/logout
+
+Invalidate current JWT token.
+
+**Request**: (no body)
+
+**Response** (200 OK):
+```json
+{
+  "message": "Logged out successfully"
+}
+```
+
+## Schema Changes
+
+### POST /schema-changes
+
+Create a new schema change record.
+
+**Request**:
+```json
+{
+  "service_name": "user-service",
   "change_type": "breaking",
-  "affected_services": ["auth-service", "notification-service"],
-  "timestamp": "2025-12-25T12:00:00Z"
+  "title": "Remove deprecated email_notifications field",
+  "description": "The email_notifications boolean field is deprecated. Use notification_channels array instead.",
+  "affected_teams": ["backend-team", "integration-team"],
+  "deployment_date": "2025-12-27T10:00:00Z",
+  "metadata": {
+    "database": "users",
+    "table": "user_preferences",
+    "columns_affected": ["email_notifications"]
+  }
 }
+```
 
-
-Response:
-
+**Response** (201 Created):
+```json
 {
-  "id": "uuid",
-  "name": "users.email column removed",
+  "id": "550e8400-e29b-41d4-a716-446655440010",
+  "service_name": "user-service",
   "change_type": "breaking",
-  "status": "open",
-  "created_at": "2025-12-25T12:00:00Z"
+  "title": "Remove deprecated email_notifications field",
+  "description": "...",
+  "status": "DRAFT",
+  "owner_id": "550e8400-e29b-41d4-a716-446655440000",
+  "affected_teams": ["backend-team", "integration-team"],
+  "deployment_date": "2025-12-27T10:00:00Z",
+  "created_at": "2025-12-25T14:30:00Z",
+  "updated_at": "2025-12-25T14:30:00Z",
+  "comment_count": 0
 }
+```
 
-Update Schema Change
+**Errors**:
+- `400`: Validation failed (missing required fields)
+- `401`: Unauthorized
+- `422`: Invalid change_type or status
 
-PUT /schema-changes/:id
+### GET /schema-changes
 
-Request Body:
+List schema changes with optional filtering.
 
+**Query Parameters**:
+```
+?service=user-service           # Filter by service name
+&changeType=breaking            # Filter by change_type (breaking|non-breaking|deprecation)
+&status=OPEN                    # Filter by status (DRAFT|OPEN|IN_PROGRESS|RESOLVED|ARCHIVED)
+&team=backend-team              # Filter by affected team
+&dateFrom=2025-12-01T00:00:00Z  # Start date (ISO 8601)
+&dateTo=2025-12-31T23:59:59Z    # End date (ISO 8601)
+&page=1                         # Pagination (default: 1)
+&limit=20                       # Results per page (default: 20, max: 100)
+&sort=created_at                # Sort by field (created_at|updated_at|deployment_date)
+&order=desc                     # Sort order (asc|desc, default: desc)
+```
+
+**Response** (200 OK):
+```json
 {
-  "status": "resolved",
-  "notes": "Updated downstream services to handle missing email column"
-}
-
-
-Response:
-
-200 OK
-
-List Schema Changes
-
-GET /schema-changes
-
-Query Parameters (optional):
-
-status=open|resolved
-
-affected_service=auth-service
-
-Response:
-
-[
-  {
-    "id": "uuid",
-    "name": "users.email column removed",
-    "change_type": "breaking",
-    "status": "open",
-    "created_at": "2025-12-25T12:00:00Z"
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440010",
+      "service_name": "user-service",
+      "change_type": "breaking",
+      "title": "Remove deprecated email_notifications field",
+      "status": "OPEN",
+      "owner": {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "name": "Alice Engineer"
+      },
+      "affected_teams": ["backend-team", "integration-team"],
+      "deployment_date": "2025-12-27T10:00:00Z",
+      "created_at": "2025-12-25T14:30:00Z",
+      "updated_at": "2025-12-25T14:30:00Z",
+      "comment_count": 3
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 47,
+    "pages": 3
   }
-]
+}
+```
 
-Delete Schema Change
+### GET /schema-changes/:id
 
-DELETE /schema-changes/:id
+Get detailed information about a specific change.
 
-Response:
-
-204 No Content
-
-Comments
-Add Comment to Schema Change
-
-POST /schema-changes/:id/comments
-
-Request Body:
-
+**Response** (200 OK):
+```json
 {
-  "content": "Auth-service needs an update for this change"
+  "id": "550e8400-e29b-41d4-a716-446655440010",
+  "service_name": "user-service",
+  "change_type": "breaking",
+  "title": "Remove deprecated email_notifications field",
+  "description": "The email_notifications boolean field is deprecated. Use notification_channels array instead.",
+  "status": "OPEN",
+  "owner": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Alice Engineer",
+    "email": "alice@company.com"
+  },
+  "affected_teams": ["backend-team", "integration-team"],
+  "deployment_date": "2025-12-27T10:00:00Z",
+  "metadata": {
+    "database": "users",
+    "table": "user_preferences",
+    "columns_affected": ["email_notifications"]
+  },
+  "created_at": "2025-12-25T14:30:00Z",
+  "updated_at": "2025-12-25T15:45:00Z",
+  "comments": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440020",
+      "author": "Bob Developer",
+      "text": "Need to coordinate with mobile team for this change",
+      "created_at": "2025-12-25T14:45:00Z"
+    }
+  ],
+  "notifications_sent": 5
 }
+```
 
+**Errors**:
+- `404`: Change not found
+- `401`: Unauthorized
 
-Response:
+### PUT /schema-changes/:id
 
+Update a schema change record.
+
+**Request**:
+```json
 {
-  "id": "uuid",
-  "schema_change_id": "uuid",
-  "user_id": "uuid",
-  "content": "Auth-service needs an update for this change",
-  "created_at": "2025-12-25T12:10:00Z"
+  "status": "IN_PROGRESS",
+  "title": "Remove deprecated email_notifications field (updated)",
+  "deployment_date": "2025-12-28T10:00:00Z"
 }
+```
 
-Get Comments for Schema Change
+**Response** (200 OK):
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440010",
+  "status": "IN_PROGRESS",
+  "title": "Remove deprecated email_notifications field (updated)",
+  "deployment_date": "2025-12-28T10:00:00Z",
+  "updated_at": "2025-12-25T16:00:00Z"
+}
+```
 
-GET /schema-changes/:id/comments
+**Errors**:
+- `403`: Forbidden (only owner or admin can update)
+- `404`: Change not found
+- `409`: Invalid state transition
 
-Response:
+### DELETE /schema-changes/:id
 
-[
-  {
-    "id": "uuid",
-    "schema_change_id": "uuid",
-    "user_id": "uuid",
-    "content": "Auth-service needs an update for this change",
-    "created_at": "2025-12-25T12:10:00Z"
+Delete a schema change record (soft delete).
+
+**Response** (204 No Content)
+
+**Errors**:
+- `403`: Forbidden (only owner or admin can delete)
+- `404`: Change not found
+
+## Comments & Discussion
+
+### POST /schema-changes/:id/comments
+
+Add a comment to a schema change.
+
+**Request**:
+```json
+{
+  "text": "We need to verify this with the mobile team before deployment"
+}
+```
+
+**Response** (201 Created):
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440020",
+  "schema_change_id": "550e8400-e29b-41d4-a716-446655440010",
+  "author": {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "name": "Bob Developer"
+  },
+  "text": "We need to verify this with the mobile team before deployment",
+  "created_at": "2025-12-25T15:00:00Z",
+  "updated_at": "2025-12-25T15:00:00Z"
+}
+```
+
+### GET /schema-changes/:id/comments
+
+Get all comments for a schema change.
+
+**Response** (200 OK):
+```json
+{
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440020",
+      "author": {
+        "id": "550e8400-e29b-41d4-a716-446655440001",
+        "name": "Bob Developer"
+      },
+      "text": "We need to verify this with the mobile team before deployment",
+      "created_at": "2025-12-25T15:00:00Z"
+    }
+  ],
+  "total": 1
+}
+```
+
+### PUT /schema-changes/:id/comments/:comment_id
+
+Update a comment (only own comments or admin).
+
+**Request**:
+```json
+{
+  "text": "Updated comment text"
+}
+```
+
+**Response** (200 OK)
+
+### DELETE /schema-changes/:id/comments/:comment_id
+
+Delete a comment.
+
+**Response** (204 No Content)
+
+## Notifications
+
+### GET /notifications
+
+Get user's notifications.
+
+**Query Parameters**:
+```
+?read=false        # Filter unread only
+&limit=20
+&offset=0
+```
+
+**Response** (200 OK):
+```json
+{
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440030",
+      "type": "change_created",
+      "title": "New schema change in user-service",
+      "message": "Remove deprecated email_notifications field",
+      "related_change_id": "550e8400-e29b-41d4-a716-446655440010",
+      "read": false,
+      "created_at": "2025-12-25T14:30:00Z"
+    }
+  ],
+  "unread_count": 5
+}
+```
+
+### PUT /notifications/:id/read
+
+Mark notification as read.
+
+**Response** (200 OK)
+
+### PUT /notifications/read-all
+
+Mark all notifications as read.
+
+**Response** (200 OK)
+
+## Error Responses
+
+All endpoints return error responses in this format:
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed",
+    "details": [
+      {
+        "field": "title",
+        "message": "Title is required"
+      }
+    ]
   }
-]
+}
+```
 
-Notifications
-Get Notifications
+**Common HTTP Status Codes**:
+- `200`: Success
+- `201`: Created
+- `204`: No Content (success with no body)
+- `400`: Bad Request (validation error)
+- `401`: Unauthorized (missing or invalid token)
+- `403`: Forbidden (insufficient permissions)
+- `404`: Not Found
+- `409`: Conflict (invalid state transition)
+- `422`: Unprocessable Entity (business logic violation)
+- `429`: Too Many Requests (rate limited)
+- `500`: Internal Server Error
 
-GET /notifications
+## Rate Limiting
 
-Headers: Authorization: Bearer JWT_TOKEN
+```
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 999
+X-RateLimit-Reset: 1703210000
+```
 
-Response:
+Limits:
+- Public endpoints: 100 requests/hour
+- Authenticated endpoints: 1000 requests/hour
+- Admin endpoints: 10000 requests/hour
 
-[
-  {
-    "id": "uuid",
-    "type": "breaking_change",
-    "payload": {"schema_change_id": "uuid"},
-    "read": false,
-    "created_at": "2025-12-25T12:15:00Z"
+## Pagination
+
+List endpoints support cursor-based and offset-based pagination:
+
+```json
+{
+  "data": [...],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 147,
+    "pages": 8,
+    "cursor": "550e8400-e29b-41d4-a716-446655440010"
   }
-]
+}
+```
 
-Mark Notification Read
+## Webhooks (Future v1.1)
 
-PUT /notifications/:id/read
+Subscribe to events:
+- `change.created`
+- `change.updated`
+- `change.resolved`
+- `comment.added`
 
-Response:
-
-200 OK
-
-Notes
-
-All endpoints require JWT auth except /auth/*.
-
-Standard HTTP codes: 200 OK, 201 Created, 204 No Content, 400 Bad Request, 401 Unauthorized, 404 Not Found, 500 Internal Server Error.
-
-Dates use ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ.
+Configure at: `/settings/webhooks`
